@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html ng-app="disasterApp" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disaster Risk Awareness System</title>
+    <!-- Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- External CSS -->
+    <link rel="stylesheet" href="style.css">
+    <!-- AngularJS (1.8.2) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-route.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-animate.min.js"></script>
+</head>
+<body ng-controller="MainCtrl">
+
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="#!/" class="brand"><i class="fa-solid fa-shield-heart icon-pulse"></i> DisasterAware</a>
+            <div class="nav-links">
+                <a href="#!/" ng-class="{active: isActive('/')}">Home</a>
+                <a href="#!/categories" ng-class="{active: isActive('/categories')}">Categories</a>
+                <a href="#!/helper" ng-class="{active: isActive('/helper')}">Smart Helper</a>
+                <a href="#!/checklist" ng-class="{active: isActive('/checklist')}">Checklist</a>
+            </div>
+            <!-- Mobile Menu Toggle -->
+            <button class="mobile-toggle" ng-click="toggleMobileMenu()">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+        <div class="mobile-menu" ng-show="mobileMenuOpen" ng-click="toggleMobileMenu()">
+            <a href="#!/">Home</a>
+            <a href="#!/categories">Categories</a>
+            <a href="#!/helper">Smart Helper</a>
+            <a href="#!/checklist">Checklist</a>
+        </div>
+    </nav>
+
+    <!-- Main Content Area with Routing & Animations -->
+    <main class="content-container">
+        <div ng-view class="view-animate-container"></div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2026 Disaster Risk Awareness System. Stay informed, stay safe.</p>
+    </footer>
+
+    <!-- ============================================== -->
+    <!-- TEMPLATES -->
+    <!-- ============================================== -->
+
+    <!-- 1. Home Page -->
+    <script type="text/ng-template" id="home.html">
+        <div class="hero-section">
+            <div class="hero-content">
+                <h1>Prepare For The Unexpected</h1>
+                <p>Knowledge is your best defense. Learn about disaster risks and discover life-saving safety procedures.</p>
+                <div class="hero-actions">
+                    <a href="#!/categories" class="btn btn-primary">Explore Disasters</a>
+                    <a href="#!/helper" class="btn btn-secondary">Smart Helper</a>
+                </div>
+            </div>
+            <div class="hero-image">
+                <i class="fa-solid fa-house-chimney-crack hero-icon float-anim"></i>
+            </div>
+        </div>
+        
+        <div class="feature-highlights">
+            <div class="feature-card">
+                <i class="fa-solid fa-book-open"></i>
+                <h3>Comprehensive Guides</h3>
+                <p>Find step-by-step survival procedures for various disasters.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fa-solid fa-brain"></i>
+                <h3>Smart Helper</h3>
+                <p>Get instant advice tailored to your emergency situation.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fa-solid fa-list-check"></i>
+                <h3>Interactive Checklist</h3>
+                <p>Track your emergency preparedness progress offline.</p>
+            </div>
+        </div>
+    </script>
+
+    <!-- 2. Disaster Categories Page -->
+    <script type="text/ng-template" id="categories.html">
+        <div class="page-container fade-in">
+            <div class="page-header">
+                <h2>Disaster Categories</h2>
+                <p>Select a disaster to learn more about its risks, warning signs, and survival steps.</p>
+                
+                <div class="search-bar">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" ng-model="searchQuery" placeholder="Search disasters by name..." class="search-input">
+                </div>
+            </div>
+
+            <div class="cards-grid">
+                <div class="disaster-card" ng-repeat="disaster in disasters | filter:{name: searchQuery}" ng-click="goToDetails(disaster.id)">
+                    <div class="card-icon" ng-class="disaster.id">
+                        <i class="fa-solid" ng-class="disaster.icon"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>{{disaster.name}}</h3>
+                        <span class="risk-badge" ng-class="'risk-' + (disaster.riskLevel | lowercase)">Risk: {{disaster.riskLevel}}</span>
+                        <p>{{disaster.description | limitTo: 80}}...</p>
+                        <button class="btn btn-text">Read More <i class="fa-solid fa-arrow-right"></i></button>
+                    </div>
+                </div>
+                <div ng-if="(disasters | filter:{name: searchQuery}).length === 0" class="no-results">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <p>No disasters found matching "{{searchQuery}}".</p>
+                </div>
+            </div>
+        </div>
+    </script>
+
+    <!-- 3. Disaster Details Page -->
+    <script type="text/ng-template" id="details.html">
+        <div class="page-container fade-in">
+            <button class="btn btn-back" ng-click="goBack()"><i class="fa-solid fa-arrow-left"></i> Back to Categories</button>
+            
+            <div ng-if="disaster" class="details-content">
+                <div class="details-header" ng-class="disaster.id + '-bg'">
+                    <i class="fa-solid" ng-class="disaster.icon"></i>
+                    <h1>{{disaster.name}}</h1>
+                    <span class="risk-badge large" ng-class="'risk-' + (disaster.riskLevel | lowercase)">Risk Level: {{disaster.riskLevel}}</span>
+                </div>
+                
+                <div class="details-body">
+                    <div class="details-section">
+                        <h3><i class="fa-solid fa-circle-info"></i> Description</h3>
+                        <p>{{disaster.description}}</p>
+                    </div>
+
+                    <div class="details-grid">
+                        <div class="details-section warning-box">
+                            <h3><i class="fa-solid fa-triangle-exclamation"></i> Warning Signs</h3>
+                            <ul>
+                                <li ng-repeat="sign in disaster.warningSigns">{{sign}}</li>
+                            </ul>
+                        </div>
+
+                        <div class="details-section prevention-box">
+                            <h3><i class="fa-solid fa-shield-halved"></i> Prevention Tips</h3>
+                            <ul>
+                                <li ng-repeat="tip in disaster.preventionTips">{{tip}}</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="details-section survival-box">
+                        <h3><i class="fa-solid fa-person-running"></i> Step-by-Step Survival Guide</h3>
+                        <div class="step-indicator">
+                            <div class="step-item" ng-repeat="step in disaster.survivalSteps">
+                                <div class="step-number">{{$index + 1}}</div>
+                                <div class="step-text">{{step}}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div ng-if="!disaster" class="error-msg">
+                <h2>Disaster not found</h2>
+                <p>The requested disaster information could not be found.</p>
+            </div>
+        </div>
+    </script>
+
+    <!-- 4. Smart Emergency Decision Helper -->
+    <script type="text/ng-template" id="helper.html">
+        <div class="page-container helper-page fade-in">
+            <div class="helper-header">
+                <h2><i class="fa-solid fa-brain"></i> Smart Emergency Decision Helper</h2>
+                <p>Answer the questions below to receive immediate, context-aware survival recommendations.</p>
+            </div>
+
+            <div class="helper-layout">
+                <div class="helper-form-container">
+                    <form class="helper-form">
+                        <div class="form-group">
+                            <label>What disaster is happening?</label>
+                            <select ng-model="helper.disaster" required>
+                                <option value="" disabled selected>Select an emergency...</option>
+                                <option value="Fire">Fire</option>
+                                <option value="Earthquake">Earthquake</option>
+                                <option value="Flood">Flood</option>
+                                <option value="Cyclone">Cyclone</option>
+                                <option value="Medical Emergency">Medical Emergency</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group slide-in" ng-show="helper.disaster">
+                            <label>Where are you currently located?</label>
+                            <div class="radio-group">
+                                <label class="radio-btn" ng-class="{selected: helper.location === 'Indoors'}">
+                                    <input type="radio" ng-model="helper.location" value="Indoors" required>
+                                    <i class="fa-solid fa-door-closed"></i> Indoors
+                                </label>
+                                <label class="radio-btn" ng-class="{selected: helper.location === 'Outdoors'}">
+                                    <input type="radio" ng-model="helper.location" value="Outdoors" required>
+                                    <i class="fa-solid fa-tree"></i> Outdoors
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group slide-in" ng-show="helper.location">
+                            <label>Is there immediate life-threatening danger?</label>
+                            <div class="radio-group">
+                                <label class="radio-btn" ng-class="{selected: helper.danger === 'Yes'}">
+                                    <input type="radio" ng-model="helper.danger" value="Yes" required>
+                                    <i class="fa-solid fa-triangle-exclamation"></i> Yes
+                                </label>
+                                <label class="radio-btn" ng-class="{selected: helper.danger === 'No'}">
+                                    <input type="radio" ng-model="helper.danger" value="No" required>
+                                    <i class="fa-solid fa-thumbs-up"></i> No
+                                </label>
+                            </div>
+                        </div>
+
+                        <button type="button" class="btn btn-primary btn-large btn-block" ng-disabled="!helper.disaster || !helper.location || !helper.danger" ng-click="getAdvice()">
+                            Get Immediate Action Plan
+                        </button>
+                    </form>
+                </div>
+
+                <div class="helper-result-container" ng-show="result" class="fade-in">
+                    <div class="result-card" ng-class="{'danger-active': helper.danger === 'Yes'}">
+                        <h3>Recommended Immediate Actions</h3>
+                        <div class="result-actions">
+                            <div class="action-item" ng-repeat="action in result track by $index">
+                                <i class="fa-solid fa-circle-check"></i>
+                                <span>{{action}}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </script>
+
+    <!-- 5. Safety Checklist -->
+    <script type="text/ng-template" id="checklist.html">
+        <div class="page-container fade-in">
+            <div class="checklist-header">
+                <h2><i class="fa-solid fa-list-check"></i> Safety Preparedness Checklist</h2>
+                <p>Track your readiness. Your progress is saved securely on your device.</p>
+            </div>
+
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" ng-style="{'width': getProgress() + '%'}"></div>
+                </div>
+                <span class="progress-text">{{getProgress()}}% Prepared</span>
+            </div>
+
+            <div class="checklist-items">
+                <label class="check-item" ng-repeat="item in items" ng-class="{'completed': item.done}">
+                    <input type="checkbox" ng-model="item.done" ng-change="saveChecklist()">
+                    <span class="custom-checkbox"></span>
+                    <span class="item-text">{{item.text}}</span>
+                </label>
+            </div>
+            
+            <div class="checklist-actions">
+                <button class="btn btn-text" ng-click="resetChecklist()"><i class="fa-solid fa-rotate-right"></i> Reset Progress</button>
+            </div>
+        </div>
+    </script>
+
+    <!-- ============================================== -->
+    <!-- ANGULARJS LOGIC -->
+    <!-- ============================================== -->
+    <script>
+        // Initialize App with ngRoute and ngAnimate
+        var app = angular.module('disasterApp', ['ngRoute', 'ngAnimate']);
+
+        // Routing Configuration
+        app.config(['$routeProvider', function($routeProvider) {
+            $routeProvider
+                .when('/', {
+                    templateUrl: 'home.html'
+                })
+                .when('/categories', {
+                    templateUrl: 'categories.html',
+                    controller: 'CategoriesCtrl'
+                })
+                .when('/disaster/:id', {
+                    templateUrl: 'details.html',
+                    controller: 'DetailsCtrl'
+                })
+                .when('/helper', {
+                    templateUrl: 'helper.html',
+                    controller: 'HelperCtrl'
+                })
+                .when('/checklist', {
+                    templateUrl: 'checklist.html',
+                    controller: 'ChecklistCtrl'
+                })
+                .otherwise({
+                    redirectTo: '/'
+                });
+        }]);
+
+        // Disaster Data Service
+        app.service('DisasterData', function() {
+            this.disasters = [
+                {
+                    id: 'fire',
+                    name: 'Fire / Structure Fire',
+                    icon: 'fa-fire',
+                    riskLevel: 'High',
+                    description: 'A sudden, uncontrolled fire that breaks out in residential, commercial, or natural environments, capable of spreading rapidly and causing massive structural damage or life threats.',
+                    warningSigns: ['Smell of smoke or burning materials', 'Activated smoke detectors and fire alarms', 'Unusual heat emitting from walls or doors', 'Visible flames or thick smoke'],
+                    preventionTips: ['Ensure functional smoke detectors in every room', 'Keep fire extinguishers accessible and checked annually', 'Avoid leaving stovetops unattended', 'Regularly inspect electrical wirings and outlets', 'Develop and practice a household escape plan'],
+                    survivalSteps: [
+                        'Stay calm and immediately alert others nearby.',
+                        'Stay low to the ground to avoid inhaling smoke and toxic gases.',
+                        'Cover your nose and mouth with a damp cloth if possible.',
+                        'Evacuate using the nearest stairwell or exit—NEVER use elevators.',
+                        'Check doors for heat with the back of your hand before opening.',
+                        'Call emergency services (911) once safely outside.',
+                        'Stop, Drop, and Roll if your clothing catches fire.'
+                    ]
+                },
+                {
+                    id: 'earthquake',
+                    name: 'Earthquake',
+                    icon: 'fa-house-crack',
+                    riskLevel: 'High',
+                    description: 'A sudden and violent shaking of the ground, sometimes causing great destruction, as a result of movements within the earth\'s crust or volcanic action.',
+                    warningSigns: ['Sudden, intense shaking of the ground', 'Loud rumbling or roaring noises', 'Swaying buildings or falling objects', 'Animals exhibiting distressed behavior before shaking'],
+                    preventionTips: ['Secure heavy furniture, bookcases, and appliances to wall studs', 'Create an emergency kit with 3 days of supplies', 'Identify safe spots to take cover in every room', 'Know how to turn off gas and water valves'],
+                    survivalSteps: [
+                        'DROP to your hands and knees immediately.',
+                        'COVER your head and neck, and get under a sturdy desk or table.',
+                        'HOLD ON to your shelter until the shaking stops entirely.',
+                        'Stay away from glass, windows, outside doors and walls, and anything that could fall.',
+                        'If outdoors, move to an open area away from buildings, trees, streetlights, and utility wires.',
+                        'If driving, stop safely and stay in the vehicle.'
+                    ]
+                },
+                {
+                    id: 'flood',
+                    name: 'Flood',
+                    icon: 'fa-water',
+                    riskLevel: 'Moderate',
+                    description: 'An overflow of a large amount of water beyond its normal limits, especially over what is normally dry land. Flash floods can occur precisely and suddenly with little warning.',
+                    warningSigns: ['Heavy, continuous rainfall', 'Rapidly rising water levels in rivers and streams', 'Flood watches and warnings from local authorities', 'Water pooling visibly in streets and yards'],
+                    preventionTips: ['Elevate critical utilities like electrical panels and heating systems', 'Keep sandbags available if living in a high-risk area', 'Clear gutters and drains regularly', 'Have an evacuation route mapped out'],
+                    survivalSteps: [
+                        'Move immediately to higher ground or the highest floor of your home.',
+                        'Do not drive or walk through floodwaters—just 6 inches of moving water can knock you down.',
+                        'Evacuate immediately if instructed by authorities.',
+                        'Disconnect all electrical appliances and turn off utilities at main switches.',
+                        'Avoid contact with floodwater, which may be contaminated or electrically charged.',
+                        'Do not climb into a closed attic; you may become trapped.'
+                    ]
+                },
+                {
+                    id: 'cyclone',
+                    name: 'Cyclone / Hurricane',
+                    icon: 'fa-hurricane',
+                    riskLevel: 'High',
+                    description: 'A large scale air mass that rotates around a strong center of low atmospheric pressure, characterized by inward spiraling winds, causing heavy rain and destructive force.',
+                    warningSigns: ['Rapid drops in barometric pressure', 'Darkened sky and strong, shifting winds', 'Heavy, torrential rainfall', 'Official meteorological watches or warnings issued'],
+                    preventionTips: ['Install storm shutters or board up windows with plywood', 'Secure or bring indoors all loose outdoor furniture', 'Trim trees and shrubs around your property', 'Ensure emergency kit is stocked and easily accessible'],
+                    survivalSteps: [
+                        'Stay indoors, firmly away from windows and glass doors.',
+                        'Take refuge in a small interior room, closet, or hallway on the lowest level.',
+                        'Keep an emergency weather radio tuned and listen continuously for updates.',
+                        'Do not be fooled by the "Eye" of the storm; the calm is temporary.',
+                        'If instructed to evacuate, do so immediately following marked routes.',
+                        'Lie on the floor under a sturdy object if the structure begins to fail.'
+                    ]
+                },
+                {
+                    id: 'medical',
+                    name: 'Medical Emergency',
+                    icon: 'fa-staff-snake',
+                    riskLevel: 'Critical',
+                    description: 'An acute injury or illness that poses an immediate risk to a person\'s life or long-term health, requiring immediate intervention by emergency responders.',
+                    warningSigns: ['Sudden, severe chest pain or pressure', 'Difficulty breathing or shortness of breath', 'Unresponsiveness or altered mental state', 'Severe bleeding, burns, or sudden numbness'],
+                    preventionTips: ['Maintain routine health checkups and manage chronic conditions', 'Keep a well-stocked first aid kit at home and in the car', 'Take basic First Aid and CPR certification courses', 'Keep emergency numbers easily accessible'],
+                    survivalSteps: [
+                        'Assess the environment to ensure the scene is safe for you to enter.',
+                        'Call emergency services (911) immediately or ask a bystander to do so.',
+                        'Do not move the victim unless they are in immediate, life-threatening danger.',
+                        'If trained, perform CPR starting with chest compressions if the victim is unresponsive.',
+                        'Apply firm, direct pressure to any severely bleeding wounds using a clean cloth.',
+                        'Keep the victim warm and comfortable while waiting for paramedics.'
+                    ]
+                }
+            ];
+
+            this.getDisasters = function() {
+                return this.disasters;
+            };
+
+            this.getDisasterById = function(id) {
+                return this.disasters.find(function(d) { return d.id === id; });
+            };
+        });
+
+        // Main Controller for global variables (like active route checking)
+        app.controller('MainCtrl', ['$scope', '$location', function($scope, $location) {
+            $scope.mobileMenuOpen = false;
+            
+            $scope.toggleMobileMenu = function() {
+                $scope.mobileMenuOpen = !$scope.mobileMenuOpen;
+            };
+
+            $scope.isActive = function(route) {
+                // simple check
+                if (route === '/') {
+                    return $location.path() === '/';
+                }
+                return $location.path().indexOf(route) === 0;
+            };
+
+            // close menu on route change
+            $scope.$on('$routeChangeSuccess', function() {
+                $scope.mobileMenuOpen = false;
+                window.scrollTo(0,0);
+            });
+        }]);
+
+        // Categories Controller
+        app.controller('CategoriesCtrl', ['$scope', 'DisasterData', '$location', function($scope, DisasterData, $location) {
+            $scope.disasters = DisasterData.getDisasters();
+            $scope.searchQuery = '';
+
+            $scope.goToDetails = function(id) {
+                $location.path('/disaster/' + id);
+            };
+        }]);
+
+        // Details Controller
+        app.controller('DetailsCtrl', ['$scope', '$routeParams', 'DisasterData', '$window', function($scope, $routeParams, DisasterData, $window) {
+            var id = $routeParams.id;
+            $scope.disaster = DisasterData.getDisasterById(id);
+
+            $scope.goBack = function() {
+                $window.history.back();
+            };
+        }]);
+
+        // Checklist Controller
+        app.controller('ChecklistCtrl', ['$scope', function($scope) {
+            // Default Items
+            var defaultItems = [
+                { text: 'Emergency contacts correctly saved and accessible', done: false },
+                { text: 'First aid kit fully stocked and unexpired', done: false },
+                { text: 'Flashlight available with extra new batteries', done: false },
+                { text: 'Evacuation plan prepared and rehearsed with family', done: false },
+                { text: '3-day supply of non-perishable food securely stored', done: false },
+                { text: 'Sufficient water supply (1 gallon per person/day)', done: false },
+                { text: 'Essential daily medications secured', done: false },
+                { text: 'Battery-powered or hand-crank emergency radio', done: false },
+                { text: 'Important physical documents securely stored in waterproof container', done: false },
+                { text: 'Multi-purpose tool or Swiss army knife', done: false }
+            ];
+
+            $scope.items = angular.copy(defaultItems);
+
+            // Load from Local Storage
+            var saved = localStorage.getItem('disasterChecklist');
+            if (saved) {
+                try {
+                    var parsed = JSON.parse(saved);
+                    // Map back
+                    $scope.items.forEach(function(item, idx) {
+                        var found = parsed.find(function(p) { return p.text === item.text; });
+                        if (found) item.done = found.done;
+                    });
+                } catch(e) {}
+            }
+
+            $scope.saveChecklist = function() {
+                localStorage.setItem('disasterChecklist', JSON.stringify($scope.items));
+            };
+
+            $scope.getProgress = function() {
+                var count = $scope.items.filter(function(i) { return i.done; }).length;
+                return Math.round((count / $scope.items.length) * 100);
+            };
+
+            $scope.resetChecklist = function() {
+                if(confirm("Are you sure you want to reset your checklist progress?")) {
+                    $scope.items = angular.copy(defaultItems);
+                    $scope.saveChecklist();
+                }
+            };
+        }]);
+
+        // Helper Controller
+        app.controller('HelperCtrl', ['$scope', function($scope) {
+            $scope.helper = {
+                disaster: '',
+                location: '',
+                danger: ''
+            };
+            
+            $scope.result = null;
+
+            $scope.getAdvice = function() {
+                if (!$scope.helper.disaster || !$scope.helper.location || !$scope.helper.danger) return;
+                
+                var actions = [];
+                var d = $scope.helper.disaster;
+                var l = $scope.helper.location;
+                
+                // Construct logic based on permutations
+                if (d === 'Fire') {
+                    if (l === 'Indoors') {
+                        actions = [
+                            'Stay low to avoid smoke inhalation.',
+                            'Cover your mouth with a damp cloth if available.',
+                            'Feel doors for heat before opening—do not open if hot.',
+                            'Use the nearest emergency exit immediately. DO NOT use elevators.'
+                        ];
+                    } else {
+                        actions = [
+                            'Move far away from the building to a safe assembly point.',
+                            'Do not block access paths for emergency vehicles.',
+                            'Never attempt to re-enter a burning building.'
+                        ];
+                    }
+                } else if (d === 'Earthquake') {
+                    if (l === 'Indoors') {
+                        actions = [
+                            'Drop, Cover, and Hold On under sturdy furniture.',
+                            'Stay clearly away from windows, glass, and heavy cabinets.',
+                            'Do not attempt to run outside while the ground is shaking.'
+                        ];
+                    } else {
+                        actions = [
+                            'Move to a clear, open area away from buildings, trees, and power lines.',
+                            'Drop to the ground and stay there until shaking stops.'
+                        ];
+                    }
+                } else if (d === 'Flood') {
+                    if (l === 'Indoors') {
+                        actions = [
+                            'Move to the highest level of the building immediately.',
+                            'Disconnect electrical appliances to avoid electrocution.',
+                            'Do not climb into a closed attic; move to the roof only if necessary.'
+                        ];
+                    } else {
+                        actions = [
+                            'Move to higher ground immediately.',
+                            'Do not walk, swim, or drive through floodwaters (Turn Around, Don\'t Drown).',
+                            'Stay away from power lines and electrical wires.'
+                        ];
+                    }
+                } else if (d === 'Cyclone') {
+                    if (l === 'Indoors') {
+                        actions = [
+                            'Close all interior doors and stay strictly away from windows.',
+                            'Take refuge in a small interior room, closet, or hallway on the lowest level.',
+                            'Protect your head and neck with blankets or pillows.'
+                        ];
+                    } else {
+                        actions = [
+                            'Seek shelter in a sturdy, permanent building immediately.',
+                            'If no shelter is available, lie flat and face-down in a low-lying area and cover your head.'
+                        ];
+                    }
+                } else if (d === 'Medical Emergency') {
+                    actions = [
+                        'Evaluate the scene for physical safety before approaching.',
+                        'Call emergency services (911) instantly.',
+                        'Do not move the injured person unless they are in direct, life-threatening danger.',
+                        'Perform First Aid or CPR only if you are trained to do so.'
+                    ];
+                }
+
+                // Append danger prefix if required
+                if ($scope.helper.danger === 'Yes') {
+                    actions.unshift('EMERGENCY THREAT LEVEL HIGH: Evacuate or protect yourself immediately without hesitation!');
+                } else {
+                    actions.push('Remain alert, continuously monitor emergency broadcasts, and await official instructions.');
+                }
+                
+                // Assign result array
+                $scope.result = actions;
+            };
+        }]);
+    </script>
+</body>
+</html>
